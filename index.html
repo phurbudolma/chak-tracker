@@ -521,8 +521,9 @@
                     <div style="flex: 1; font-weight: 600; color: #d97706;">Enable Motion Access</div>
                 </div>
                 <div style="padding-left: 45px; color: #666; font-size: 14px; margin-bottom: 8px;">
-                    Scroll down to find:<br>
-                    <strong>"Motion & Orientation Access"</strong>
+                    In Safari settings, scroll <strong>all the way to the bottom</strong><br>
+                    Look under <strong>"SETTINGS FOR WEBSITES"</strong> section<br>
+                    Find: <strong>"Motion & Orientation Access"</strong>
                 </div>
                 <div style="padding-left: 45px;">
                     <div style="background: white; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
@@ -534,6 +535,9 @@
                     <div style="margin-top: 8px; font-size: 13px; color: #666;">
                         ← Turn the switch ON (green)
                     </div>
+                </div>
+                <div style="margin-top: 12px; padding: 10px; background: #fff; border-radius: 8px; font-size: 13px; color: #666;">
+                    <strong>Can't find it?</strong> You might have iOS 12 or older. In that case, motion works automatically - just close this and try starting a session!
                 </div>
             </div>
 
@@ -565,6 +569,7 @@
         </div>
 
         <button class="btn-primary" id="backToDashboardBtn">Got It - Back to Dashboard</button>
+        <button class="btn-secondary" id="skipMotionHelpBtn" style="margin-top: 12px;">Can't Find Setting? Try Anyway</button>
         
         <div style="text-align: center; margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 12px;">
             <div style="font-size: 14px; color: white; opacity: 0.9;">
@@ -1284,6 +1289,11 @@
             
             document.getElementById('backToDashboardBtn').addEventListener('click', () => {
                 showScreen('dashboardScreen');
+            });
+            
+            document.getElementById('skipMotionHelpBtn').addEventListener('click', () => {
+                showScreen('dashboardScreen');
+                alert('Okay! Try starting a practice session.\n\nIf motion detection works, great!\nIf not, you may need to use the "Manual Count" button to track your prostrations.');
             });
             
             document.getElementById('resetGoalBtn').addEventListener('click', () => {
