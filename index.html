@@ -472,6 +472,105 @@
         <button class="btn-primary" id="startPracticeBtn">Start Practice Session</button>
         <button class="btn-secondary" id="resetGoalBtn">Reset Goal</button>
         <button class="btn-secondary" id="recalibrateBtn" style="margin-top: 12px; display: none;">Recalibrate Motion Detection</button>
+        <button class="btn-secondary" id="helpMotionBtn" style="margin-top: 12px; background: #ff9800; color: white; border: none;">📱 How to Enable Motion Sensors</button>
+    </div>
+
+    <!-- Motion Setup Help Screen -->
+    <div id="motionHelpScreen" class="screen">
+        <div class="header">
+            <h1>📱 Setup Guide</h1>
+            <p>Enable Motion Sensors</p>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 15px; color: #333;">Follow These Steps:</h2>
+            
+            <div style="background: #f8f8f8; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <div style="width: 30px; height: 30px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 15px;">1</div>
+                    <div style="flex: 1; font-weight: 600;">Exit This App</div>
+                </div>
+                <div style="padding-left: 45px; color: #666; font-size: 14px;">
+                    Swipe up to close Chak Tracker completely
+                </div>
+            </div>
+
+            <div style="background: #f8f8f8; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <div style="width: 30px; height: 30px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 15px;">2</div>
+                    <div style="flex: 1; font-weight: 600;">Open Settings App</div>
+                </div>
+                <div style="padding-left: 45px; color: #666; font-size: 14px;">
+                    Tap the ⚙️ Settings icon on your home screen
+                </div>
+            </div>
+
+            <div style="background: #f8f8f8; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <div style="width: 30px; height: 30px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 15px;">3</div>
+                    <div style="flex: 1; font-weight: 600;">Go to Safari Settings</div>
+                </div>
+                <div style="padding-left: 45px; color: #666; font-size: 14px;">
+                    Scroll down and tap "Safari"
+                </div>
+            </div>
+
+            <div style="background: #fff3cd; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 2px solid #ff9800;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <div style="width: 30px; height: 30px; background: #ff9800; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 15px;">4</div>
+                    <div style="flex: 1; font-weight: 600; color: #d97706;">Enable Motion Access</div>
+                </div>
+                <div style="padding-left: 45px; color: #666; font-size: 14px; margin-bottom: 8px;">
+                    Scroll down to find:<br>
+                    <strong>"Motion & Orientation Access"</strong>
+                </div>
+                <div style="padding-left: 45px;">
+                    <div style="background: white; padding: 10px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-weight: 600;">Motion & Orientation Access</span>
+                        <div style="width: 51px; height: 31px; background: #4caf50; border-radius: 16px; position: relative;">
+                            <div style="position: absolute; right: 2px; top: 2px; width: 27px; height: 27px; background: white; border-radius: 50%;"></div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 8px; font-size: 13px; color: #666;">
+                        ← Turn the switch ON (green)
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: #f8f8f8; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <div style="width: 30px; height: 30px; background: #667eea; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 15px;">5</div>
+                    <div style="flex: 1; font-weight: 600;">Return to Chak Tracker</div>
+                </div>
+                <div style="padding-left: 45px; color: #666; font-size: 14px;">
+                    Go back to home screen and tap the Chak Tracker icon 🙏
+                </div>
+            </div>
+
+            <div style="background: #e8f5e9; padding: 15px; border-radius: 12px; margin-bottom: 15px;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <div style="width: 30px; height: 30px; background: #4caf50; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin-right: 15px;">6</div>
+                    <div style="flex: 1; font-weight: 600;">Grant Permission</div>
+                </div>
+                <div style="padding-left: 45px; color: #666; font-size: 14px;">
+                    When you start a session, tap "Allow" on the popup
+                </div>
+            </div>
+
+            <div style="background: #fff; padding: 15px; border: 2px dashed #667eea; border-radius: 12px; text-align: center;">
+                <div style="font-size: 20px; margin-bottom: 10px;">✅</div>
+                <div style="font-weight: 600; margin-bottom: 5px;">You're All Set!</div>
+                <div style="font-size: 14px; color: #666;">Motion detection will work automatically</div>
+            </div>
+        </div>
+
+        <button class="btn-primary" id="backToDashboardBtn">Got It - Back to Dashboard</button>
+        
+        <div style="text-align: center; margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.1); border-radius: 12px;">
+            <div style="font-size: 14px; color: white; opacity: 0.9;">
+                <strong>Important:</strong> Always open the app from the home screen icon, NOT from Safari browser!
+            </div>
+        </div>
     </div>
 
     <!-- Practice Session Screen -->
@@ -542,7 +641,10 @@
         </div>
 
         <button class="btn-primary" id="stopSessionBtn">Stop Session</button>
-        <button class="btn-secondary" id="adjustCountBtn">Adjust Count</button>
+        <div class="action-buttons">
+            <button class="btn-secondary" id="manualCountBtn" style="display: none;">Manual Count (+1)</button>
+            <button class="btn-secondary" id="adjustCountBtn">Adjust Count</button>
+        </div>
     </div>
 
     <!-- Calibration Overlay -->
@@ -978,7 +1080,7 @@
             };
             
             document.getElementById('sessionCount').textContent = '0';
-            document.getElementById('statusMessage').textContent = 'Calibrating sensors...';
+            document.getElementById('statusMessage').textContent = 'Requesting motion sensor access...';
             
             // Update sensitivity slider to saved value
             document.getElementById('sensitivitySlider').value = appState.userProfile.sensitivity;
@@ -987,45 +1089,59 @@
             // Request motion permission for iOS 13+
             if (typeof DeviceMotionEvent.requestPermission === 'function') {
                 try {
+                    document.getElementById('statusMessage').textContent = '⚠️ Please tap "Allow" when prompted for motion access';
+                    
                     const permission = await DeviceMotionEvent.requestPermission();
+                    
                     if (permission !== 'granted') {
-                        alert('Motion sensors permission denied. Please enable in settings.');
-                        showScreen('dashboardScreen');
+                        // Show help screen instead of just alert
+                        showScreen('motionHelpScreen');
                         return;
                     }
                 } catch (error) {
                     console.error('Permission error:', error);
+                    // Show help screen on error
+                    showScreen('motionHelpScreen');
+                    return;
                 }
             }
             
-            // Initialize motion detector
-            motionDetector = new MotionDetector();
+            document.getElementById('statusMessage').textContent = 'Calibrating sensors...';
             
-            // First time? Do practice calibration
-            const isFirstTime = !appState.userProfile.calibrationComplete;
-            await motionDetector.calibrate(isFirstTime);
-            
-            if (isFirstTime) {
-                document.getElementById('statusMessage').textContent = '✅ Calibration complete! Your pattern has been learned';
-            } else {
-                document.getElementById('statusMessage').textContent = '✅ Ready! Start your prostrations';
-            }
-            
-            motionDetector.start(() => {
-                appState.currentSession.count++;
-                document.getElementById('sessionCount').textContent = appState.currentSession.count;
+            try {
+                // Initialize motion detector
+                motionDetector = new MotionDetector();
                 
-                // Visual feedback
-                const countEl = document.getElementById('sessionCount');
-                countEl.style.transform = 'scale(1.2)';
-                countEl.style.transition = 'transform 0.2s';
-                setTimeout(() => {
-                    countEl.style.transform = 'scale(1)';
-                }, 200);
-            });
-            
-            // Start timer
-            startSessionTimer();
+                // First time? Do practice calibration
+                const isFirstTime = !appState.userProfile.calibrationComplete;
+                await motionDetector.calibrate(isFirstTime);
+                
+                if (isFirstTime) {
+                    document.getElementById('statusMessage').textContent = '✅ Calibration complete! Your pattern has been learned';
+                } else {
+                    document.getElementById('statusMessage').textContent = '✅ Ready! Start your prostrations';
+                }
+                
+                motionDetector.start(() => {
+                    appState.currentSession.count++;
+                    document.getElementById('sessionCount').textContent = appState.currentSession.count;
+                    
+                    // Visual feedback
+                    const countEl = document.getElementById('sessionCount');
+                    countEl.style.transform = 'scale(1.2)';
+                    countEl.style.transition = 'transform 0.2s';
+                    setTimeout(() => {
+                        countEl.style.transform = 'scale(1)';
+                    }, 200);
+                });
+                
+                // Start timer
+                startSessionTimer();
+            } catch (error) {
+                console.error('Calibration error:', error);
+                alert('Error starting session: ' + error.message);
+                showScreen('dashboardScreen');
+            }
         }
 
         function startSessionTimer() {
@@ -1162,6 +1278,14 @@
             // Dashboard Event Listeners
             document.getElementById('startPracticeBtn').addEventListener('click', startSession);
             
+            document.getElementById('helpMotionBtn').addEventListener('click', () => {
+                showScreen('motionHelpScreen');
+            });
+            
+            document.getElementById('backToDashboardBtn').addEventListener('click', () => {
+                showScreen('dashboardScreen');
+            });
+            
             document.getElementById('resetGoalBtn').addEventListener('click', () => {
                 if (confirm('Are you sure you want to reset your goal? All progress will be lost.')) {
                     localStorage.removeItem('chakTrackerState');
@@ -1181,6 +1305,24 @@
             // Session Event Listeners
             document.getElementById('stopSessionBtn').addEventListener('click', stopSession);
             document.getElementById('adjustCountBtn').addEventListener('click', adjustCount);
+            
+            // Manual count button (fallback if motion detection doesn't work)
+            document.getElementById('manualCountBtn').addEventListener('click', () => {
+                appState.currentSession.count++;
+                document.getElementById('sessionCount').textContent = appState.currentSession.count;
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate(50);
+                }
+                
+                // Visual feedback
+                const countEl = document.getElementById('sessionCount');
+                countEl.style.transform = 'scale(1.2)';
+                countEl.style.transition = 'transform 0.2s';
+                setTimeout(() => {
+                    countEl.style.transform = 'scale(1)';
+                }, 200);
+            });
             
             // Sensitivity slider
             document.getElementById('sensitivitySlider').addEventListener('input', (e) => {
