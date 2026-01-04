@@ -6,8 +6,21 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#8B4513">
+    <meta name="apple-mobile-web-app-title" content="Chak Tracker">
     <title>Chak Tracker - Prostration Counter</title>
     <link rel="manifest" href="manifest.json">
+    
+    <style>
+        /* Prevent iOS shake to undo */
+        body {
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        input, textarea {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+    </style>
     
     <style>
         * {
@@ -428,6 +441,7 @@
 
         <button class="btn-primary" id="startPracticeBtn">Start Practice Session</button>
         <button class="btn-secondary" id="resetGoalBtn">Reset Goal</button>
+        <button class="btn-secondary" id="recalibrateBtn" style="margin-top: 12px; display: none;">Recalibrate Motion Detection</button>
     </div>
 
     <!-- Practice Session Screen -->
@@ -446,6 +460,55 @@
                 <div class="counter-number" id="sessionCount">0</div>
                 <div class="counter-label">Chaks This Session</div>
             </div>
+            
+            <div id="motionIndicator" style="margin-top: 20px; padding: 10px; background: #f0f0f0; border-radius: 8px; display: none;">
+                <div style="font-size: 14px; color: #666; margin-bottom: 5px;">Motion Detection</div>
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;">
+                        <div style="font-size: 12px; color: #888;">Status:</div>
+                        <div id="motionStatus" style="font-size: 14px; font-weight: 600; color: #667eea;">Ready</div>
+                    </div>
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #e0e0e0; display: flex; align-items: center; justify-content: center;" id="motionDot">
+                        <div style="width: 20px; height: 20px; border-radius: 50%; background: #ccc;" id="motionDotInner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 20px;">
+            <div style="margin-bottom: 15px;">
+                <label style="font-weight: 600; margin-bottom: 10px; display: block;">Sensitivity Adjustment</label>
+                <div style="display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 5px;">
+                    <span>Less Sensitive</span>
+                    <span id="sensitivityValue">Medium</span>
+                    <span>More Sensitive</span>
+                </div>
+                <input type="range" id="sensitivitySlider" min="4" max="15" value="8" step="0.5" style="width: 100%; height: 8px; border-radius: 4px; background: #e0e0e0; outline: none; -webkit-appearance: none;">
+                <style>
+                    #sensitivitySlider::-webkit-slider-thumb {
+                        -webkit-appearance: none;
+                        appearance: none;
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 50%;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        cursor: pointer;
+                        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+                    }
+                    #sensitivitySlider::-moz-range-thumb {
+                        width: 24px;
+                        height: 24px;
+                        border-radius: 50%;
+                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                        cursor: pointer;
+                        border: none;
+                        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+                    }
+                </style>
+                <div style="font-size: 12px; color: #888; margin-top: 8px; text-align: center;">
+                    Adjust if counts are too high or too low
+                </div>
+            </div>
         </div>
 
         <button class="btn-primary" id="stopSessionBtn">Stop Session</button>
@@ -455,9 +518,13 @@
     <!-- Calibration Overlay -->
     <div class="calibration-overlay" id="calibrationOverlay">
         <div class="calibration-content">
-            <h2>Calibrating...</h2>
-            <p>Hold your phone and get ready</p>
+            <h2 id="calibrationTitle">Calibrating...</h2>
+            <p id="calibrationInstructions">Hold your phone and get ready</p>
             <div class="calibration-countdown" id="calibrationCountdown">3</div>
+            <div id="practiceMode" style="display: none;">
+                <p style="font-size: 16px; margin-top: 20px;">Practice prostrations detected: <span id="practiceCount" style="font-size: 24px; font-weight: 700;">0</span> / 5</p>
+                <p style="font-size: 14px; opacity: 0.8; margin-top: 10px;">Do 5 prostrations at your normal pace</p>
+            </div>
         </div>
     </div>
 
@@ -474,6 +541,11 @@
             currentSession: {
                 count: 0,
                 startTime: null
+            },
+            userProfile: {
+                sensitivity: 8,
+                averageMovementPattern: null,
+                calibrationComplete: false
             }
         };
 
@@ -565,6 +637,11 @@
             document.getElementById('targetGoal').textContent = appState.goal;
             document.getElementById('remainingCount').textContent = Math.max(0, appState.goal - appState.totalCount);
             document.getElementById('totalProgress').style.width = totalPercent + '%';
+            
+            // Show recalibrate button if user has completed initial calibration
+            if (appState.userProfile.calibrationComplete) {
+                document.getElementById('recalibrateBtn').style.display = 'block';
+            }
         }
 
         // Motion Detection Class
@@ -573,22 +650,44 @@
                 this.lastAcceleration = { x: 0, y: 0, z: 0 };
                 this.isMovingDown = false;
                 this.lastPeakTime = 0;
-                this.threshold = 8;
+                this.threshold = appState.userProfile.sensitivity || 8;
                 this.minTimeBetweenCounts = 800; // milliseconds
                 this.onCount = null;
                 this.calibrationData = [];
                 this.isCalibrated = false;
+                this.movementHistory = [];
+                this.practiceMode = false;
+                this.practiceData = [];
+                this.practiceCount = 0;
+                this.baselineZ = 0;
+                this.smoothingWindow = [];
+                this.smoothingWindowSize = 5;
             }
 
-            async calibrate() {
+            async calibrate(withPractice = false) {
                 return new Promise((resolve) => {
                     this.calibrationData = [];
+                    this.practiceData = [];
+                    this.practiceCount = 0;
                     let countdown = 3;
                     
                     const calibrationOverlay = document.getElementById('calibrationOverlay');
                     const countdownEl = document.getElementById('calibrationCountdown');
+                    const titleEl = document.getElementById('calibrationTitle');
+                    const instructionsEl = document.getElementById('calibrationInstructions');
+                    const practiceModeEl = document.getElementById('practiceMode');
+                    const practiceCountEl = document.getElementById('practiceCount');
                     
                     calibrationOverlay.classList.add('active');
+                    
+                    // First time? Do practice mode
+                    if (withPractice && !appState.userProfile.calibrationComplete) {
+                        titleEl.textContent = 'Smart Calibration';
+                        instructionsEl.textContent = 'First, stand still for calibration';
+                    } else {
+                        titleEl.textContent = 'Calibrating...';
+                        instructionsEl.textContent = 'Hold your phone and get ready';
+                    }
                     
                     const countdownInterval = setInterval(() => {
                         countdown--;
@@ -596,6 +695,7 @@
                         
                         if (countdown === 0) {
                             clearInterval(countdownInterval);
+                            countdownEl.textContent = '✓';
                             
                             // Collect baseline data for 2 seconds
                             const startTime = Date.now();
@@ -610,9 +710,21 @@
                                 
                                 if (Date.now() - startTime > 2000) {
                                     window.removeEventListener('devicemotion', collectData);
-                                    this.isCalibrated = true;
-                                    calibrationOverlay.classList.remove('active');
-                                    resolve();
+                                    
+                                    // Calculate baseline
+                                    if (this.calibrationData.length > 0) {
+                                        const avgZ = this.calibrationData.reduce((sum, d) => sum + d.z, 0) / this.calibrationData.length;
+                                        this.baselineZ = avgZ;
+                                    }
+                                    
+                                    // If first time and practice mode requested, start practice
+                                    if (withPractice && !appState.userProfile.calibrationComplete) {
+                                        this.startPracticeMode(resolve, calibrationOverlay, titleEl, instructionsEl, practiceModeEl, practiceCountEl);
+                                    } else {
+                                        this.isCalibrated = true;
+                                        calibrationOverlay.classList.remove('active');
+                                        resolve();
+                                    }
                                 }
                             };
                             
@@ -622,31 +734,170 @@
                 });
             }
 
+            startPracticeMode(resolve, overlay, titleEl, instructionsEl, practiceModeEl, practiceCountEl) {
+                this.practiceMode = true;
+                titleEl.textContent = 'Learning Your Pattern';
+                instructionsEl.style.display = 'none';
+                practiceModeEl.style.display = 'block';
+                
+                const practiceListener = (event) => {
+                    if (!event.accelerationIncludingGravity) return;
+                    
+                    const acc = event.accelerationIncludingGravity;
+                    const relativeZ = acc.z - this.baselineZ;
+                    
+                    this.practiceData.push({
+                        z: relativeZ,
+                        timestamp: Date.now()
+                    });
+                    
+                    // Detect practice prostrations
+                    const currentTime = Date.now();
+                    const timeSinceLastCount = currentTime - this.lastPeakTime;
+                    
+                    if (relativeZ < -this.threshold && !this.isMovingDown && timeSinceLastCount > this.minTimeBetweenCounts) {
+                        this.isMovingDown = true;
+                    }
+                    
+                    if (relativeZ > this.threshold && this.isMovingDown && timeSinceLastCount > this.minTimeBetweenCounts) {
+                        this.isMovingDown = false;
+                        this.lastPeakTime = currentTime;
+                        this.practiceCount++;
+                        practiceCountEl.textContent = this.practiceCount;
+                        
+                        if (navigator.vibrate) {
+                            navigator.vibrate(50);
+                        }
+                        
+                        if (this.practiceCount >= 5) {
+                            window.removeEventListener('devicemotion', practiceListener);
+                            this.analyzePracticeData();
+                            this.practiceMode = false;
+                            overlay.classList.remove('active');
+                            appState.userProfile.calibrationComplete = true;
+                            saveState();
+                            resolve();
+                        }
+                    }
+                };
+                
+                window.addEventListener('devicemotion', practiceListener);
+            }
+
+            analyzePracticeData() {
+                // Analyze the practice data to optimize threshold
+                if (this.practiceData.length === 0) return;
+                
+                const movements = [];
+                let currentMovement = [];
+                let inMovement = false;
+                
+                for (let i = 0; i < this.practiceData.length; i++) {
+                    const point = this.practiceData[i];
+                    
+                    if (Math.abs(point.z) > this.threshold * 0.5) {
+                        if (!inMovement) {
+                            inMovement = true;
+                            currentMovement = [];
+                        }
+                        currentMovement.push(point.z);
+                    } else if (inMovement && currentMovement.length > 10) {
+                        movements.push([...currentMovement]);
+                        inMovement = false;
+                    }
+                }
+                
+                // Calculate average peak values
+                if (movements.length > 0) {
+                    const peaks = movements.map(m => Math.max(...m.map(Math.abs)));
+                    const avgPeak = peaks.reduce((a, b) => a + b, 0) / peaks.length;
+                    
+                    // Set threshold to 60% of average peak
+                    const optimizedThreshold = avgPeak * 0.6;
+                    this.threshold = Math.max(4, Math.min(15, optimizedThreshold));
+                    appState.userProfile.sensitivity = this.threshold;
+                    appState.userProfile.averageMovementPattern = {
+                        avgPeak: avgPeak,
+                        movements: movements.length
+                    };
+                    
+                    // Update slider
+                    document.getElementById('sensitivitySlider').value = this.threshold;
+                    this.updateSensitivityLabel(this.threshold);
+                    
+                    saveState();
+                }
+            }
+
+            updateSensitivityLabel(value) {
+                const label = document.getElementById('sensitivityValue');
+                if (value < 6) label.textContent = 'Very Sensitive';
+                else if (value < 8) label.textContent = 'Sensitive';
+                else if (value < 10) label.textContent = 'Medium';
+                else if (value < 12) label.textContent = 'Less Sensitive';
+                else label.textContent = 'Least Sensitive';
+            }
+
+            smoothAcceleration(z) {
+                this.smoothingWindow.push(z);
+                if (this.smoothingWindow.length > this.smoothingWindowSize) {
+                    this.smoothingWindow.shift();
+                }
+                return this.smoothingWindow.reduce((a, b) => a + b, 0) / this.smoothingWindow.length;
+            }
+
             start(onCountCallback) {
                 this.onCount = onCountCallback;
                 this.lastPeakTime = Date.now();
+                this.smoothingWindow = [];
                 
                 window.addEventListener('devicemotion', this.handleMotion.bind(this));
+                
+                // Show motion indicator
+                document.getElementById('motionIndicator').style.display = 'block';
             }
 
             handleMotion(event) {
                 if (!event.accelerationIncludingGravity) return;
                 
                 const acc = event.accelerationIncludingGravity;
-                const totalAcceleration = Math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2);
+                const relativeZ = acc.z - this.baselineZ;
+                const smoothedZ = this.smoothAcceleration(relativeZ);
+                
+                // Visual feedback
+                const motionDotInner = document.getElementById('motionDotInner');
+                const motionStatus = document.getElementById('motionStatus');
+                
+                if (Math.abs(smoothedZ) > this.threshold) {
+                    motionDotInner.style.background = '#667eea';
+                    motionDotInner.style.transform = 'scale(1.5)';
+                } else {
+                    motionDotInner.style.background = '#ccc';
+                    motionDotInner.style.transform = 'scale(1)';
+                }
                 
                 const currentTime = Date.now();
                 const timeSinceLastCount = currentTime - this.lastPeakTime;
                 
                 // Detect significant downward motion
-                if (acc.z < -this.threshold && !this.isMovingDown && timeSinceLastCount > this.minTimeBetweenCounts) {
+                if (smoothedZ < -this.threshold && !this.isMovingDown && timeSinceLastCount > this.minTimeBetweenCounts) {
                     this.isMovingDown = true;
+                    motionStatus.textContent = 'Going down...';
+                    motionStatus.style.color = '#ff9800';
                 }
                 
                 // Detect upward motion (completing the prostration)
-                if (acc.z > this.threshold && this.isMovingDown && timeSinceLastCount > this.minTimeBetweenCounts) {
+                if (smoothedZ > this.threshold && this.isMovingDown && timeSinceLastCount > this.minTimeBetweenCounts) {
                     this.isMovingDown = false;
                     this.lastPeakTime = currentTime;
+                    
+                    motionStatus.textContent = 'Counted! ✓';
+                    motionStatus.style.color = '#4caf50';
+                    
+                    setTimeout(() => {
+                        motionStatus.textContent = 'Ready';
+                        motionStatus.style.color = '#667eea';
+                    }, 1000);
                     
                     if (this.onCount) {
                         this.onCount();
@@ -661,12 +912,16 @@
 
             stop() {
                 window.removeEventListener('devicemotion', this.handleMotion.bind(this));
+                document.getElementById('motionIndicator').style.display = 'none';
             }
         }
 
         // Session Functions
         async function startSession() {
             showScreen('sessionScreen');
+            
+            // Prevent iOS shake to undo during session
+            preventShakeToUndo();
             
             appState.currentSession = {
                 count: 0,
@@ -675,6 +930,10 @@
             
             document.getElementById('sessionCount').textContent = '0';
             document.getElementById('statusMessage').textContent = 'Calibrating sensors...';
+            
+            // Update sensitivity slider to saved value
+            document.getElementById('sensitivitySlider').value = appState.userProfile.sensitivity;
+            motionDetector.updateSensitivityLabel(appState.userProfile.sensitivity);
             
             // Request motion permission for iOS 13+
             if (typeof DeviceMotionEvent.requestPermission === 'function') {
@@ -692,9 +951,16 @@
             
             // Initialize motion detector
             motionDetector = new MotionDetector();
-            await motionDetector.calibrate();
             
-            document.getElementById('statusMessage').textContent = '✅ Ready! Start your prostrations';
+            // First time? Do practice calibration
+            const isFirstTime = !appState.userProfile.calibrationComplete;
+            await motionDetector.calibrate(isFirstTime);
+            
+            if (isFirstTime) {
+                document.getElementById('statusMessage').textContent = '✅ Calibration complete! Your pattern has been learned';
+            } else {
+                document.getElementById('statusMessage').textContent = '✅ Ready! Start your prostrations';
+            }
             
             motionDetector.start(() => {
                 appState.currentSession.count++;
@@ -703,6 +969,7 @@
                 // Visual feedback
                 const countEl = document.getElementById('sessionCount');
                 countEl.style.transform = 'scale(1.2)';
+                countEl.style.transition = 'transform 0.2s';
                 setTimeout(() => {
                     countEl.style.transform = 'scale(1)';
                 }, 200);
@@ -757,6 +1024,19 @@
                 appState.currentSession.count = parseInt(newCount);
                 document.getElementById('sessionCount').textContent = appState.currentSession.count;
             }
+        }
+
+        // Prevent iOS shake to undo
+        function preventShakeToUndo() {
+            // Disable shake to undo by preventing the default shake gesture
+            window.addEventListener('devicemotion', (e) => {
+                // This listener exists to override the shake detection
+            }, { passive: true });
+            
+            // Also prevent any undo popups
+            document.addEventListener('touchmove', (e) => {
+                // Allow normal scrolling but prevent system gestures
+            }, { passive: true });
         }
 
         // Initialize App
@@ -814,9 +1094,29 @@
                 }
             });
             
+            document.getElementById('recalibrateBtn').addEventListener('click', () => {
+                if (confirm('This will reset your motion detection calibration and you\'ll do 5 practice prostrations. Continue?')) {
+                    appState.userProfile.calibrationComplete = false;
+                    appState.userProfile.averageMovementPattern = null;
+                    saveState();
+                    alert('Calibration reset! Your next practice session will include the 5-prostration learning phase.');
+                }
+            });
+            
             // Session Event Listeners
             document.getElementById('stopSessionBtn').addEventListener('click', stopSession);
             document.getElementById('adjustCountBtn').addEventListener('click', adjustCount);
+            
+            // Sensitivity slider
+            document.getElementById('sensitivitySlider').addEventListener('input', (e) => {
+                const value = parseFloat(e.target.value);
+                if (motionDetector) {
+                    motionDetector.threshold = value;
+                    motionDetector.updateSensitivityLabel(value);
+                }
+                appState.userProfile.sensitivity = value;
+                saveState();
+            });
         }
 
         // Start app when page loads
