@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#8B4513">
+    <title>Chak Tracker - Prostration Counter</title>
+    <link rel="manifest" href="manifest.json">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+            touch-action: manipulation;
+        }
+
+        .screen {
+            display: none;
+            min-height: 100vh;
+            padding: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        .screen.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            padding-top: 20px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #555;
+            font-size: 16px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .difficulty-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 15px;
+        }
+
+        .difficulty-btn {
+            padding: 18px;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            background: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .difficulty-btn:active {
+            transform: scale(0.98);
+        }
+
+        .difficulty-btn.selected {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+
+        .difficulty-btn .title {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .difficulty-btn .description {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            transition: transform 0.2s, box-shadow 0.2s;
+            min-height: 56px;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.98);
+            box-shadow: 0 2px 10px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 18px;
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-height: 56px;
+            margin-top: 12px;
+        }
+
+        .btn-secondary:active {
+            transform: scale(0.98);
+            background: #f0f0f0;
+        }
+
+        .counter-display {
+            text-align: center;
+            margin: 40px 0;
+        }
+
+        .counter-number {
+            font-size: 96px;
+            font-weight: 700;
+            color: #667eea;
+            line-height: 1;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .counter-label {
+            font-size: 18px;
+            color: #888;
+            margin-top: 10px;
+        }
+
+        .progress-bar {
+            height: 12px;
+            background: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            border-radius: 6px;
+        }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: #666;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .session-timer {
+            text-align: center;
+            font-size: 24px;
+            color: white;
+            margin: 20px 0;
+            font-weight: 500;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            font-size: 16px;
+            margin: 10px 0;
+        }
+
+        .icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .big-counter-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px 20px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin: 20px 0;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .action-buttons button {
+            flex: 1;
+        }
+
+        .calibration-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .calibration-overlay.active {
+            display: flex;
+        }
+
+        .calibration-content {
+            text-align: center;
+            color: white;
+            padding: 40px;
+        }
+
+        .calibration-content h2 {
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+
+        .calibration-content p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+
+        .calibration-countdown {
+            font-size: 72px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 380px) {
+            .counter-number {
+                font-size: 72px;
+            }
+            .header h1 {
+                font-size: 28px;
+            }
+        }
+
+        .history-item {
+            padding: 15px;
+            background: #f8f8f8;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+
+        .history-date {
+            font-size: 14px;
+            color: #888;
+            margin-bottom: 5px;
+        }
+
+        .history-count {
+            font-size: 20px;
+            font-weight: 600;
+            color: #667eea;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Goal Setup Screen -->
+    <div id="goalSetupScreen" class="screen">
+        <div class="header">
+            <div class="icon">🙏</div>
+            <h1>Chak Tracker</h1>
+            <p>Set your prostration goal</p>
+        </div>
+
+        <div class="card">
+            <div class="input-group">
+                <label for="goalInput">Total Goal (minimum 100)</label>
+                <input type="number" id="goalInput" placeholder="e.g., 10000" min="100">
+            </div>
+
+            <div class="input-group">
+                <label>Choose Your Plan</label>
+                <div class="difficulty-buttons">
+                    <button class="difficulty-btn" data-difficulty="easy">
+                        <div class="title">🐢 Easy</div>
+                        <div class="description">Take your time - longer timeline</div>
+                    </button>
+                    <button class="difficulty-btn" data-difficulty="medium">
+                        <div class="title">🚶 Medium</div>
+                        <div class="description">Steady progress - balanced pace</div>
+                    </button>
+                    <button class="difficulty-btn" data-difficulty="hard">
+                        <div class="title">🏃 Hard</div>
+                        <div class="description">Challenge mode - faster completion</div>
+                    </button>
+                </div>
+            </div>
+
+            <div id="planPreview" style="display: none; margin-top: 20px; padding: 15px; background: #f8f8f8; border-radius: 12px;">
+                <div class="stat-row">
+                    <span class="stat-label">Daily Target</span>
+                    <span class="stat-value" id="previewDaily">-</span>
+                </div>
+                <div class="stat-row">
+                    <span class="stat-label">Estimated Days</span>
+                    <span class="stat-value" id="previewDays">-</span>
+                </div>
+            </div>
+
+            <button class="btn-primary" id="startGoalBtn" disabled>Start Journey</button>
+        </div>
+    </div>
+
+    <!-- Dashboard Screen -->
+    <div id="dashboardScreen" class="screen">
+        <div class="header">
+            <h1>🙏 Chak Tracker</h1>
+            <p>Your Practice Journey</p>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 15px; color: #333;">Today's Progress</h2>
+            <div class="counter-display" style="margin: 20px 0;">
+                <div class="counter-number" id="todayCount" style="font-size: 56px;">0</div>
+                <div class="counter-label">of <span id="dailyTarget">0</span> daily goal</div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="todayProgress" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2 style="margin-bottom: 15px; color: #333;">Overall Goal</h2>
+            <div class="stat-row">
+                <span class="stat-label">Total Completed</span>
+                <span class="stat-value" id="totalCount">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Target Goal</span>
+                <span class="stat-value" id="targetGoal">0</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Remaining</span>
+                <span class="stat-value" id="remainingCount">0</span>
+            </div>
+            <div class="progress-bar" style="margin-top: 15px;">
+                <div class="progress-fill" id="totalProgress" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <button class="btn-primary" id="startPracticeBtn">Start Practice Session</button>
+        <button class="btn-secondary" id="resetGoalBtn">Reset Goal</button>
+    </div>
+
+    <!-- Practice Session Screen -->
+    <div id="sessionScreen" class="screen">
+        <div class="header">
+            <h1>Practice Session</h1>
+            <div class="session-timer" id="sessionTimer">00:00</div>
+        </div>
+
+        <div class="status-message" id="statusMessage">
+            Preparing...
+        </div>
+
+        <div class="big-counter-card">
+            <div class="counter-display">
+                <div class="counter-number" id="sessionCount">0</div>
+                <div class="counter-label">Chaks This Session</div>
+            </div>
+        </div>
+
+        <button class="btn-primary" id="stopSessionBtn">Stop Session</button>
+        <button class="btn-secondary" id="adjustCountBtn">Adjust Count</button>
+    </div>
+
+    <!-- Calibration Overlay -->
+    <div class="calibration-overlay" id="calibrationOverlay">
+        <div class="calibration-content">
+            <h2>Calibrating...</h2>
+            <p>Hold your phone and get ready</p>
+            <div class="calibration-countdown" id="calibrationCountdown">3</div>
+        </div>
+    </div>
+
+    <script>
+        // App State
+        let appState = {
+            goal: null,
+            difficulty: null,
+            dailyTarget: null,
+            startDate: null,
+            totalCount: 0,
+            dailyCounts: {},
+            sessions: [],
+            currentSession: {
+                count: 0,
+                startTime: null
+            }
+        };
+
+        // Motion Detection Variables
+        let motionDetector = null;
+        let isDetecting = false;
+        let sessionTimer = null;
+
+        // Screen Management
+        function showScreen(screenId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(screenId).classList.add('active');
+        }
+
+        // Local Storage Functions
+        function saveState() {
+            localStorage.setItem('chakTrackerState', JSON.stringify(appState));
+        }
+
+        function loadState() {
+            const saved = localStorage.getItem('chakTrackerState');
+            if (saved) {
+                appState = JSON.parse(saved);
+                return true;
+            }
+            return false;
+        }
+
+        function getTodayKey() {
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function getTodayCount() {
+            const today = getTodayKey();
+            return appState.dailyCounts[today] || 0;
+        }
+
+        function addToTodayCount(count) {
+            const today = getTodayKey();
+            appState.dailyCounts[today] = (appState.dailyCounts[today] || 0) + count;
+            appState.totalCount += count;
+            saveState();
+        }
+
+        // Goal Setup Functions
+        function calculateDailyTarget(goal, difficulty) {
+            // Base daily targets
+            const multipliers = {
+                easy: 0.4,
+                medium: 0.6,
+                hard: 0.8
+            };
+            
+            // Assume someone can do ~100 chaks per day as baseline
+            const baseDaily = 100;
+            return Math.ceil(baseDaily * multipliers[difficulty]);
+        }
+
+        function updatePlanPreview() {
+            const goal = parseInt(document.getElementById('goalInput').value);
+            const selectedBtn = document.querySelector('.difficulty-btn.selected');
+            
+            if (goal && goal >= 100 && selectedBtn) {
+                const difficulty = selectedBtn.dataset.difficulty;
+                const dailyTarget = calculateDailyTarget(goal, difficulty);
+                const estimatedDays = Math.ceil(goal / dailyTarget);
+                
+                document.getElementById('previewDaily').textContent = dailyTarget;
+                document.getElementById('previewDays').textContent = estimatedDays;
+                document.getElementById('planPreview').style.display = 'block';
+                document.getElementById('startGoalBtn').disabled = false;
+            } else {
+                document.getElementById('planPreview').style.display = 'none';
+                document.getElementById('startGoalBtn').disabled = true;
+            }
+        }
+
+        // Dashboard Functions
+        function updateDashboard() {
+            const todayCount = getTodayCount();
+            const todayPercent = Math.min((todayCount / appState.dailyTarget) * 100, 100);
+            const totalPercent = Math.min((appState.totalCount / appState.goal) * 100, 100);
+            
+            document.getElementById('todayCount').textContent = todayCount;
+            document.getElementById('dailyTarget').textContent = appState.dailyTarget;
+            document.getElementById('todayProgress').style.width = todayPercent + '%';
+            
+            document.getElementById('totalCount').textContent = appState.totalCount;
+            document.getElementById('targetGoal').textContent = appState.goal;
+            document.getElementById('remainingCount').textContent = Math.max(0, appState.goal - appState.totalCount);
+            document.getElementById('totalProgress').style.width = totalPercent + '%';
+        }
+
+        // Motion Detection Class
+        class MotionDetector {
+            constructor() {
+                this.lastAcceleration = { x: 0, y: 0, z: 0 };
+                this.isMovingDown = false;
+                this.lastPeakTime = 0;
+                this.threshold = 8;
+                this.minTimeBetweenCounts = 800; // milliseconds
+                this.onCount = null;
+                this.calibrationData = [];
+                this.isCalibrated = false;
+            }
+
+            async calibrate() {
+                return new Promise((resolve) => {
+                    this.calibrationData = [];
+                    let countdown = 3;
+                    
+                    const calibrationOverlay = document.getElementById('calibrationOverlay');
+                    const countdownEl = document.getElementById('calibrationCountdown');
+                    
+                    calibrationOverlay.classList.add('active');
+                    
+                    const countdownInterval = setInterval(() => {
+                        countdown--;
+                        countdownEl.textContent = countdown;
+                        
+                        if (countdown === 0) {
+                            clearInterval(countdownInterval);
+                            
+                            // Collect baseline data for 2 seconds
+                            const startTime = Date.now();
+                            const collectData = (event) => {
+                                if (event.accelerationIncludingGravity) {
+                                    this.calibrationData.push({
+                                        x: event.accelerationIncludingGravity.x,
+                                        y: event.accelerationIncludingGravity.y,
+                                        z: event.accelerationIncludingGravity.z
+                                    });
+                                }
+                                
+                                if (Date.now() - startTime > 2000) {
+                                    window.removeEventListener('devicemotion', collectData);
+                                    this.isCalibrated = true;
+                                    calibrationOverlay.classList.remove('active');
+                                    resolve();
+                                }
+                            };
+                            
+                            window.addEventListener('devicemotion', collectData);
+                        }
+                    }, 1000);
+                });
+            }
+
+            start(onCountCallback) {
+                this.onCount = onCountCallback;
+                this.lastPeakTime = Date.now();
+                
+                window.addEventListener('devicemotion', this.handleMotion.bind(this));
+            }
+
+            handleMotion(event) {
+                if (!event.accelerationIncludingGravity) return;
+                
+                const acc = event.accelerationIncludingGravity;
+                const totalAcceleration = Math.sqrt(acc.x ** 2 + acc.y ** 2 + acc.z ** 2);
+                
+                const currentTime = Date.now();
+                const timeSinceLastCount = currentTime - this.lastPeakTime;
+                
+                // Detect significant downward motion
+                if (acc.z < -this.threshold && !this.isMovingDown && timeSinceLastCount > this.minTimeBetweenCounts) {
+                    this.isMovingDown = true;
+                }
+                
+                // Detect upward motion (completing the prostration)
+                if (acc.z > this.threshold && this.isMovingDown && timeSinceLastCount > this.minTimeBetweenCounts) {
+                    this.isMovingDown = false;
+                    this.lastPeakTime = currentTime;
+                    
+                    if (this.onCount) {
+                        this.onCount();
+                    }
+                    
+                    // Haptic feedback
+                    if (navigator.vibrate) {
+                        navigator.vibrate(50);
+                    }
+                }
+            }
+
+            stop() {
+                window.removeEventListener('devicemotion', this.handleMotion.bind(this));
+            }
+        }
+
+        // Session Functions
+        async function startSession() {
+            showScreen('sessionScreen');
+            
+            appState.currentSession = {
+                count: 0,
+                startTime: Date.now()
+            };
+            
+            document.getElementById('sessionCount').textContent = '0';
+            document.getElementById('statusMessage').textContent = 'Calibrating sensors...';
+            
+            // Request motion permission for iOS 13+
+            if (typeof DeviceMotionEvent.requestPermission === 'function') {
+                try {
+                    const permission = await DeviceMotionEvent.requestPermission();
+                    if (permission !== 'granted') {
+                        alert('Motion sensors permission denied. Please enable in settings.');
+                        showScreen('dashboardScreen');
+                        return;
+                    }
+                } catch (error) {
+                    console.error('Permission error:', error);
+                }
+            }
+            
+            // Initialize motion detector
+            motionDetector = new MotionDetector();
+            await motionDetector.calibrate();
+            
+            document.getElementById('statusMessage').textContent = '✅ Ready! Start your prostrations';
+            
+            motionDetector.start(() => {
+                appState.currentSession.count++;
+                document.getElementById('sessionCount').textContent = appState.currentSession.count;
+                
+                // Visual feedback
+                const countEl = document.getElementById('sessionCount');
+                countEl.style.transform = 'scale(1.2)';
+                setTimeout(() => {
+                    countEl.style.transform = 'scale(1)';
+                }, 200);
+            });
+            
+            // Start timer
+            startSessionTimer();
+        }
+
+        function startSessionTimer() {
+            sessionTimer = setInterval(() => {
+                const elapsed = Date.now() - appState.currentSession.startTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                document.getElementById('sessionTimer').textContent = 
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function stopSession() {
+            if (motionDetector) {
+                motionDetector.stop();
+            }
+            
+            if (sessionTimer) {
+                clearInterval(sessionTimer);
+            }
+            
+            // Save session
+            const sessionCount = appState.currentSession.count;
+            if (sessionCount > 0) {
+                addToTodayCount(sessionCount);
+                
+                appState.sessions.push({
+                    date: new Date().toISOString(),
+                    count: sessionCount,
+                    duration: Date.now() - appState.currentSession.startTime
+                });
+                
+                saveState();
+            }
+            
+            updateDashboard();
+            showScreen('dashboardScreen');
+        }
+
+        function adjustCount() {
+            const currentCount = appState.currentSession.count;
+            const newCount = prompt('Enter the correct count:', currentCount);
+            
+            if (newCount !== null && !isNaN(newCount)) {
+                appState.currentSession.count = parseInt(newCount);
+                document.getElementById('sessionCount').textContent = appState.currentSession.count;
+            }
+        }
+
+        // Initialize App
+        function initApp() {
+            // Check if goal is set
+            if (loadState() && appState.goal) {
+                updateDashboard();
+                showScreen('dashboardScreen');
+            } else {
+                showScreen('goalSetupScreen');
+            }
+            
+            // Goal Setup Event Listeners
+            document.getElementById('goalInput').addEventListener('input', updatePlanPreview);
+            
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('selected'));
+                    btn.classList.add('selected');
+                    updatePlanPreview();
+                });
+            });
+            
+            document.getElementById('startGoalBtn').addEventListener('click', () => {
+                const goal = parseInt(document.getElementById('goalInput').value);
+                
+                if (goal < 100) {
+                    alert('Please set a goal of at least 100 Chaks.');
+                    return;
+                }
+                
+                const difficulty = document.querySelector('.difficulty-btn.selected').dataset.difficulty;
+                const dailyTarget = calculateDailyTarget(goal, difficulty);
+                
+                appState.goal = goal;
+                appState.difficulty = difficulty;
+                appState.dailyTarget = dailyTarget;
+                appState.startDate = new Date().toISOString();
+                appState.totalCount = 0;
+                appState.dailyCounts = {};
+                appState.sessions = [];
+                
+                saveState();
+                updateDashboard();
+                showScreen('dashboardScreen');
+            });
+            
+            // Dashboard Event Listeners
+            document.getElementById('startPracticeBtn').addEventListener('click', startSession);
+            
+            document.getElementById('resetGoalBtn').addEventListener('click', () => {
+                if (confirm('Are you sure you want to reset your goal? All progress will be lost.')) {
+                    localStorage.removeItem('chakTrackerState');
+                    location.reload();
+                }
+            });
+            
+            // Session Event Listeners
+            document.getElementById('stopSessionBtn').addEventListener('click', stopSession);
+            document.getElementById('adjustCountBtn').addEventListener('click', adjustCount);
+        }
+
+        // Start app when page loads
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+
+        // Prevent screen sleep during sessions
+        let wakeLock = null;
+        async function requestWakeLock() {
+            try {
+                if ('wakeLock' in navigator) {
+                    wakeLock = await navigator.wakeLock.request('screen');
+                }
+            } catch (err) {
+                console.log('Wake Lock error:', err);
+            }
+        }
+
+        // Request wake lock when starting session
+        document.getElementById('startPracticeBtn').addEventListener('click', requestWakeLock);
+    </script>
+</body>
+</html>
+
