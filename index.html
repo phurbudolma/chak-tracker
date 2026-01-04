@@ -38,6 +38,30 @@
             overflow-x: hidden;
             touch-action: manipulation;
         }
+        
+        #loadingScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            color: white;
+        }
+        
+        #loadingScreen.hidden {
+            display: none;
+        }
+        
+        .loader {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
 
         .screen {
             display: none;
@@ -354,6 +378,12 @@
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen">
+        <div class="loader">🙏</div>
+        <h2>Loading Chak Tracker...</h2>
+        <p style="margin-top: 10px; opacity: 0.8;">Please wait</p>
+    </div>
 
     <!-- Goal Setup Screen -->
     <div id="goalSetupScreen" class="screen">
@@ -569,6 +599,24 @@
             const saved = localStorage.getItem('chakTrackerState');
             if (saved) {
                 appState = JSON.parse(saved);
+                
+                // Ensure userProfile exists (for backwards compatibility)
+                if (!appState.userProfile) {
+                    appState.userProfile = {
+                        sensitivity: 8,
+                        averageMovementPattern: null,
+                        calibrationComplete: false
+                    };
+                }
+                
+                // Ensure userProfile has all required properties
+                if (appState.userProfile.sensitivity === undefined) {
+                    appState.userProfile.sensitivity = 8;
+                }
+                if (appState.userProfile.calibrationComplete === undefined) {
+                    appState.userProfile.calibrationComplete = false;
+                }
+                
                 return true;
             }
             return false;
@@ -831,6 +879,7 @@
 
             updateSensitivityLabel(value) {
                 const label = document.getElementById('sensitivityValue');
+                if (!label) return; // Guard against missing element
                 if (value < 6) label.textContent = 'Very Sensitive';
                 else if (value < 8) label.textContent = 'Sensitive';
                 else if (value < 10) label.textContent = 'Medium';
@@ -1041,11 +1090,37 @@
 
         // Initialize App
         function initApp() {
-            // Check if goal is set
-            if (loadState() && appState.goal) {
-                updateDashboard();
-                showScreen('dashboardScreen');
-            } else {
+            try {
+                console.log('Initializing Chak Tracker...');
+                
+                // Hide loading screen
+                const loadingScreen = document.getElementById('loadingScreen');
+                if (loadingScreen) {
+                    loadingScreen.classList.add('hidden');
+                }
+                
+                // Check if goal is set
+                if (loadState() && appState.goal) {
+                    console.log('Goal found, showing dashboard');
+                    updateDashboard();
+                    showScreen('dashboardScreen');
+                } else {
+                    console.log('No goal found, showing setup');
+                    showScreen('goalSetupScreen');
+                }
+                
+                console.log('App initialized successfully');
+            } catch (error) {
+                console.error('Error initializing app:', error);
+                
+                // Hide loading screen even on error
+                const loadingScreen = document.getElementById('loadingScreen');
+                if (loadingScreen) {
+                    loadingScreen.classList.add('hidden');
+                }
+                
+                alert('Error loading app: ' + error.message + '\n\nPlease refresh the page.');
+                // Show goal setup as fallback
                 showScreen('goalSetupScreen');
             }
             
